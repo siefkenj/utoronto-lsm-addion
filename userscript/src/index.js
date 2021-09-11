@@ -14,9 +14,13 @@ log("React script has successfully started");
 async function main() {
     // Find <body/>. This can be any element. We wait until
     // the page has loaded enough for that element to exist.
-    const body = await awaitElement(".header-bar");
-    const container = document.createElement("div");
+    const body = await awaitElement(".t-NavigationBar");
+    const container = document.createElement("li");
+    container.classList.add("t-NavigationBar-item");
 
+    body.prepend(container);
+    ReactDOM.render(<span>Cool stuff</span>, container);
+    /*
     const route = RouteParser("*start/courses/:courseId/quizzes/:quizId");
     const match = route.match(window.location);
     if (match) {
@@ -25,6 +29,7 @@ async function main() {
         body.appendChild(container);
         ReactDOM.render(<App />, container);
     }
+    */
 }
 
 // Call `main()` every time the page URL changes, including on first load.
