@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name     Canvas Quiz Stats
-// @namespace https://github.com/siefkenj/crowdmark-addons
+// @name     utoronto LSM Addon
+// @namespace https://github.com/siefkenj/utoronto-lsm-addons
 // @version  1.4
 // @description A sample userscript built using react
-// @include https://q.utoronto.ca/courses/*
+// @include https://lsm.utoronto.ca/*
 // @grant    none
 // ==/UserScript==
 
