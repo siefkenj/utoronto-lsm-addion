@@ -4,14 +4,14 @@
 # Installation
 
 In Firefox or Chrome, install [Greasemonkey](https://addons.mozilla.org/en-CA/firefox/addon/greasemonkey/) or Tampermonkey.
-You can then install the script by clicking [here](https://github.com/siefkenj/canvas-quiz-stats/raw/main/dist/react-userscripts.user.js).
+You can then install the script by clicking [here](https://github.com/siefkenj/utoronto-lsm-addon/raw/main/dist/react-userscripts.user.js).
 
 # Development
 
 ## Building
 
-To build `canvas-quiz-stats` you must have [Node.js](https://nodejs.org/en/download/) and [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
-Then, from the `canvas-quiz-stats` directory, run
+To build `utoronto-lsm-addon` you must have [Node.js](https://nodejs.org/en/download/) and [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+Then, from the `utoronto-lsm-addon` directory, run
 
 ```
 cd userscript/
@@ -27,7 +27,7 @@ developing a normal web application, not a userscript addon.)
 
 When developing, it's nice to be able to get the newest version of your script upon a page
 refresh. To do this, install the development version of `react-userscripts` script located
-`dist/react-userscripts-dev.user.js` or click [here](https://github.com/siefkenj/canvas-quiz-stats/raw/main/dist/react-userscripts-dev.user.js).
+`dist/react-userscripts-dev.user.js` or click [here](https://github.com/siefkenj/utoronto-lsm-addon/raw/main/dist/react-userscripts-dev.user.js).
 The dev script will dynamically load the extension from port `8124`, so you can take advantage of
 `create-react-app`'s ability to auto-recompile an app when the source changes.
 
