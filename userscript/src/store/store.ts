@@ -190,6 +190,7 @@ const rootStore: RootStore = {
             const bookingsMatchingDate = booking.bookings.filter(
                 (b) => b.date === date
             );
+            log("booger", bookingsMatchingDate);
             return {
                 date,
                 room: booking.room,
@@ -199,9 +200,10 @@ const rootStore: RootStore = {
                         // We're looking for a booking that starts this hour,
                         // ends this hour, or contains a the whole hour block
                         (b) =>
-                            (b.start >= hour && b.start < hour + 1) ||
-                            (b.end >= hour && b.end < hour + 1) ||
-                            (b.start <= hour && b.end >= hour)
+                            (b.start > hour && b.start < hour + 1) ||
+                            (b.end > hour && b.end < hour + 1) ||
+                            (b.start > hour && b.end < hour + 1) ||
+                            (b.start <= hour && b.end >= hour + 1)
                     );
                     if (matchingBooking) {
                         return { desc: matchingBooking.desc, hour };
