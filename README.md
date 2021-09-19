@@ -6,6 +6,9 @@
 In Firefox or Chrome, install [Greasemonkey](https://addons.mozilla.org/en-CA/firefox/addon/greasemonkey/) or Tampermonkey.
 You can then install the script by clicking [here](https://github.com/siefkenj/utoronto-lsm-addon/raw/master/dist/react-userscripts.user.js).
 
+To access the addon, navigate to [https://lsm.utoronto.ca/lsm_portal](https://lsm.utoronto.ca/lsm_portal) and click the `Room Viewer Addon`
+in the top menubar.
+
 # Development
 
 ## Building
