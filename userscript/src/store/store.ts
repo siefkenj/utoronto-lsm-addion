@@ -190,7 +190,6 @@ const rootStore: RootStore = {
             const bookingsMatchingDate = booking.bookings.filter(
                 (b) => b.date === date
             );
-            log("booger", bookingsMatchingDate);
             return {
                 date,
                 room: booking.room,
