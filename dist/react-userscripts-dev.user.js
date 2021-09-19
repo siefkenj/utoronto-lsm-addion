@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name     utoronto LSM Addon
+// @name     utoronto LSM Addon Dev
 // @version  1.1
 // @description Development mode for React Userscripts.
 // @include https://lsm.utoronto.ca/*
