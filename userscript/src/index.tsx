@@ -1,10 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import "./index.css";
 import App from "./App";
+import "./index.css";
 import { awaitElement, log, addLocationChangeCallback } from "./utils";
-import RouteParser from "route-parser";
-import { quizGlobal } from "./quiz-global";
+import { StoreProvider } from "easy-peasy";
+import { store } from "./store/store";
 
 log("React script has successfully started");
 
@@ -19,17 +19,12 @@ async function main() {
     container.classList.add("t-NavigationBar-item");
 
     body.prepend(container);
-    ReactDOM.render(<span>Cool stuff</span>, container);
-    /*
-    const route = RouteParser("*start/courses/:courseId/quizzes/:quizId");
-    const match = route.match(window.location);
-    if (match) {
-        quizGlobal.init(match);
-        log(quizGlobal);
-        body.appendChild(container);
-        ReactDOM.render(<App />, container);
-    }
-    */
+    ReactDOM.render(
+        <StoreProvider store={store}>
+            <App />
+        </StoreProvider>,
+        container
+    );
 }
 
 // Call `main()` every time the page URL changes, including on first load.

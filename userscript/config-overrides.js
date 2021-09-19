@@ -45,9 +45,9 @@ module.exports = function override(config, env) {
 
     // disable hot module reloading because Greasemonkey cannot handle it
     // Delete any entries to the "HotDev" client
-    config.entry = config.entry.filter(
-        x => !x.toLowerCase().includes("hotdev")
-    );
+    //config.entry = config.entry.filter(
+    //    x => !x.toLowerCase().includes("hotdev")
+    //);
     config.plugins = config.plugins.filter(
         x => !x || x.constructor.name !== "HotModuleReplacementPlugin"
     );

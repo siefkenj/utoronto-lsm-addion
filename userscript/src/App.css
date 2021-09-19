@@ -22,58 +22,99 @@
 }
 
 .fullscreen-modal {
-    width: 95%;
-    max-width: 95% !important;
+    width: 98%;
+    max-width: 98% !important;
 }
 
-.query-input {
-    display: block;
-    width: 100%;
+.throbber-container {
+    float: left;
+    margin-right: 10px;
+    width: 20px;
+    overflow: hidden;
 }
 
-.question-container {
-    border-top: 1px solid black;
-    border-bottom: 1px solid black;
-    margin-bottom: 4px;
-}
-
-.question-answer-box {
-    margin-left: 2em;
-}
-.question-option.correct {
-    color: #559900;
-}
-.question-option.multiple_answers_question::before {
-    content: "☐";
-    font-weight: bold;
-    margin-right: 0.5em;
-}
-.question-option.multiple_answers_question.correct::before {
-    content: "☒";
-    color: #559900;
-}
-
-.question-option.multiple_choice_question::before {
-    content: "◌";
-    font-weight: bold;
-    margin-right: 0.5em;
-}
-.question-option.multiple_choice_question.correct::before {
-    content: "●";
-    color: #559900;
-}
-
-.group-container {
-    margin-left: 1em;
-    margin-top: 1em;
-}
-.question-group {
-    border-left: 4px solid rgb(10, 93, 202);
+#canvas-quiz-stats label {
     padding-left: 1em;
+    padding-top: 0.5ex;
 }
 
-.question-id {
-    font-weight: bold;
-    color: blue;
-    margin-bottom: 0.3em;
+.room-info-display {
+    width: 7em;
+    background-color: rgb(218, 218, 218);
+    text-align: center;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.room-info-display:hover {
+    background-color: rgb(190, 190, 190);
+}
+
+.room-info-display[aria-describedby^="popover"] {
+    box-shadow: 0px 0px 5px #2b91ff;
+}
+.slider-container > * {
+    flex-grow: 1;
+}
+.slider-container {
+    margin-bottom: 3.5em;
+}
+
+.availability-table {
+    /* Needed for unknown reason....
+    https://stackoverflow.com/questions/22220698/height-100-for-div-inside-div-with-display-table-cell */
+    height: 1px;
+    overflow: hidden;
+    margin-left: auto;
+    margin-right: auto;
+}
+.availability-table thead {
+    text-align: center;
+}
+.availability-table thead td {
+    border-bottom: 1px solid black;
+}
+.availability-table .booking {
+    width: 7em;
+    height: 100%;
+    text-align: center;
+    background-color: rgb(242, 238, 216);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.availability-table .no-booking {
+    background-color: rgb(61, 221, 69);
+}
+.availability-table tr {
+    position: relative;
+}
+.availability-table td {
+    height: 100%;
+}
+.availability-table .course-section {
+    font-size: smaller;
+}
+
+/* for highlighting columns. Modified from
+https://css-tricks.com/simple-css-row-column-highlighting/
+*/
+.availability-table td,
+.availability-table th {
+    position: relative;
+}
+.availability-table td:hover::after {
+    pointer-events: none;
+    content: "";
+    position: absolute;
+    background-color: rgba(83, 83, 62, 0.158);
+    left: 0;
+    top: -5000px;
+    height: 10000px;
+    width: 100%;
+    z-index: 1000;
 }
