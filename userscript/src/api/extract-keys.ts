@@ -31,11 +31,17 @@ export function extractKeysFromLsmPage(html: string) {
             .filter((t) => t.match("ajaxIdentifier"))[0] || "";
     const ajaxIdentifiers = extractedJavascript
         .split("\n")
-        .filter((s) => s.match('{"'))
+        .filter((s) => s.match('{"') && s.match("ajaxIdentifier"))
         .map((s) => {
             const match = s.match(/"ajaxIdentifier":"(.*?)"/);
             if (match) {
-                return match[1];
+                try {
+                    // We're paring Javascript strings directly. They may include
+                    // escaped unicode (e.g. "\u002C"). This escaped unicode should be processed.
+                    return JSON.parse(`"${match[1]}"`);
+                } catch (e) {
+                    return match[1];
+                }
             }
             return "";
         });

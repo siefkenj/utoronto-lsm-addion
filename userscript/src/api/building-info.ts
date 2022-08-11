@@ -26,6 +26,7 @@ export async function fetchBuildings(pageVars: ExtractedKeys) {
                 ],
                 protected: pageVars.pPageItemsProtected,
                 rowVersion: "",
+                formRegionChecksums: [],
             },
             salt: pageVars.pSalt,
         }),
@@ -135,9 +136,9 @@ async function _fetchRoomDetails(building: string, room: string) {
         (x) => x.textContent === "Capacity"
     )?.nextSibling?.textContent;
     const capacity = capacityStr ? parseInt(capacityStr, 10) : null;
-    const photos = (Array.from(
-        doc.querySelectorAll("img[src*=Room]")
-    ) as HTMLImageElement[]).map((x) => x.src);
+    const photos = (
+        Array.from(doc.querySelectorAll("img[src*=Room]")) as HTMLImageElement[]
+    ).map((x) => x.src);
     const roomLayout =
         (doc.querySelector("a[href*=RoomPlansPDF]") as HTMLAnchorElement)
             ?.href || null;
