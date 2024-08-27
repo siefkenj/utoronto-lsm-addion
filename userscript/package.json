@@ -3,30 +3,28 @@
     "version": "1.5.0",
     "private": true,
     "dependencies": {
-        "@types/esprima": "^4.0.3",
-        "@types/react": "^17.0.21",
-        "@types/react-bootstrap-range-slider": "^1.2.1",
-        "@types/react-bootstrap-typeahead": "^5.1.7",
-        "@types/react-dom": "^17.0.9",
-        "bootstrap": "^4.6.0",
-        "easy-peasy": "^5.0.3",
+        "@types/esprima": "^4.0.6",
+        "@types/react": "^18.3.4",
+        "@types/react-dom": "^18.3.0",
+        "bootstrap": "^5.3.3",
+        "easy-peasy": "^6.0.5",
         "esprima": "^4.0.1",
         "file-saver": "^2.0.5",
         "npm-run-all": "^4.1.5",
-        "react": "^17.0.2",
-        "react-bootstrap": "^1.6.3",
-        "react-bootstrap-range-slider": "^3.0.2",
-        "react-bootstrap-typeahead": "^5.2.0",
-        "react-dom": "^17.0.2",
+        "react": "^18.3.1",
+        "react-bootstrap": "^2.10.4",
+        "react-bootstrap-range-slider": "^3.0.8",
+        "react-bootstrap-typeahead": "^6.3.2",
+        "react-dom": "^18.3.1",
         "route-parser": "0.0.5",
-        "typescript": "^4.4.3",
+        "typescript": "^5.5.4",
         "vite": "^5.4.2"
     },
     "scripts": {
         "start": "npm-run-all --parallel build:watch preview",
         "preview": "vite preview",
         "build:watch": "vite build --watch",
-        "build": "npm run build-styles && vite build",
+        "build": "vite build",
         "finalize": "mkdir -p ../dist && cp src/userscript-header.js ../dist/react-userscripts.user.js && cat build/static/js/main.js >> ../dist/react-userscripts.user.js",
         "build-styles": "lessc src/namespaced-bootstrap.less src/namespaced-bootstrap.css"
     },
@@ -46,6 +44,6 @@
         ]
     },
     "devDependencies": {
-        "less": "^4.1.1"
+        "less": "^4.2.0"
     }
 }
