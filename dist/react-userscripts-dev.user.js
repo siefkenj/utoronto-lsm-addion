@@ -16,9 +16,12 @@ function log(...args) {
 log("Dev mode started")
 
 async function main() {
-  const resp = await fetch("http://localhost:8124/static/js/main.js")
+  const resp = await fetch("http://localhost:8124/react-userscripts.user.js")
   const script = await resp.text();
   log("Got Dev script")
+  if (script.length === 0 || script.trim().startsWith("<")) {
+    log("WARNING: dev script was empty")
+  }
   eval(script)
   log("Dev script evaled")
   
