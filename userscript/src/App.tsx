@@ -1,7 +1,7 @@
-import React from "react";
+import React, { act } from "react";
 import "./App.css";
 import "./namespaced-bootstrap.css";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Tabs, Tab } from "react-bootstrap";
 import { DayPicker } from "./components/day-picker";
 import { BuildingPicker } from "./components/building-picker";
 import { RoomCalendar } from "./components/room-calendar";
@@ -9,9 +9,15 @@ import { CapacitySlider } from "./components/capacity-slider";
 import { ActivityThrobber } from "./components/activity-throbber";
 import { RoomInfoDownloadButton } from "./components/room-info-download";
 import { useStoreActions } from "./store/hooks";
+import { SessionDisplay, SessionSelectWide } from "./components/session-select";
+import { Session } from "./libs/session-date";
+import { CourseStats } from "./components/course-stats";
 
 export function App() {
     const [modalOpen, setModalOpen] = React.useState(false);
+    const [activeTab, setActiveTab] = React.useState<"rooms" | "course">(
+        "rooms"
+    );
     const init = useStoreActions((state) => state.init);
 
     React.useEffect(() => {
@@ -47,33 +53,65 @@ export function App() {
                 onHide={() => setModalOpen(false)}
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>
-                        UToronto LSM Addon
+                    <Modal.Title className="modal-title">
                         <ActivityThrobber />
+                        UToronto LSM Addon
+                        <Tabs
+                            id="room-viewer-tabs"
+                            defaultActiveKey="rooms"
+                            activeKey={activeTab}
+                            onSelect={(k) =>
+                                setActiveTab((k as typeof activeTab) || "rooms")
+                            }
+                        >
+                            <Tab eventKey="rooms" title="Room Viewer" />
+                            <Tab eventKey="course" title="Course Stats" />
+                        </Tabs>
                     </Modal.Title>
                 </Modal.Header>
 
-                <Modal.Body>
-                    <div className="d-flex align-items-start">
-                        <DayPicker />
-                        <div style={{ flexGrow: 1 }}>
-                            <CapacitySlider />
-                        </div>
-                    </div>
-                    <BuildingPicker />
-                    <RoomCalendar />
-                </Modal.Body>
+                {activeTab === "rooms" && (
+                    <React.Fragment>
+                        <Modal.Body>
+                            <div className="d-flex align-items-start">
+                                <DayPicker />
+                                <div style={{ flexGrow: 1 }}>
+                                    <CapacitySlider />
+                                </div>
+                            </div>
+                            <BuildingPicker />
+                            <RoomCalendar />
+                        </Modal.Body>
 
-                <Modal.Footer>
-                    <RoomInfoDownloadButton />
-                    <span style={{ flexGrow: 1 }} />
-                    <Button
-                        variant="secondary"
-                        onClick={() => setModalOpen(false)}
-                    >
-                        Close
-                    </Button>
-                </Modal.Footer>
+                        <Modal.Footer>
+                            <RoomInfoDownloadButton />
+                            <span style={{ flexGrow: 1 }} />
+                            <Button
+                                variant="secondary"
+                                onClick={() => setModalOpen(false)}
+                            >
+                                Close
+                            </Button>
+                        </Modal.Footer>
+                    </React.Fragment>
+                )}
+                {activeTab === "course" && (
+                    <React.Fragment>
+                        <Modal.Body>
+                            <CourseStats />
+                        </Modal.Body>
+
+                        <Modal.Footer>
+                            <span style={{ flexGrow: 1 }} />
+                            <Button
+                                variant="secondary"
+                                onClick={() => setModalOpen(false)}
+                            >
+                                Close
+                            </Button>
+                        </Modal.Footer>
+                    </React.Fragment>
+                )}
             </Modal>
         </React.Fragment>
     );

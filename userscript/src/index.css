@@ -11,3 +11,43 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.modal-title {
+  display: flex;
+  align-items: center;
+}
+.utk-session-name {
+  display: inline-flex;
+  margin: 0.5em;
+  width: 15em;
+  background-color: #f0f0f0;
+  border-radius: 0.5em;
+  flex-direction: column;
+}
+.utk-session-name .utk-session-header {
+  display: flex;
+  padding: 0.5em;
+  padding-bottom: 0;
+  font-weight: bold;
+  font-size: larger;
+}
+.utk-session-name .utk-session-term {
+  display: flex;
+  justify-content: space-around;
+  padding: 0.5em;
+  padding-top: 0;
+}
+
+#canvas-quiz-stats .hstack {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-self: stretch;
+}
+
+#canvas-quiz-stats .vstack {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-self: stretch;
+}

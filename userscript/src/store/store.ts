@@ -12,6 +12,8 @@ import { RoomInfo } from "../api/building-info";
 import { extractKeysFromLsmPage } from "../api/extract-keys";
 import { ROOM_INFO } from "../data/room-info";
 import { localFetch, log } from "../utils";
+import { Session } from "../libs/session-date";
+import { Course, getCourseId } from "../api/course-info";
 
 export type StoredRoomInfo = {
     _downloadDate: string;
@@ -19,18 +21,7 @@ export type StoredRoomInfo = {
 };
 
 export const HOURS_IN_CALENDAR = [
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
+    9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
 ];
 const EMPTY_LIST: any[] = [];
 
@@ -77,6 +68,13 @@ export interface RootStore {
             bookings: ({ desc: string; hour: number } | null)[];
         }[]
     >;
+    activeSession: Session;
+    setActiveSession: Action<RootStore, Session>;
+    allCourses: Record<string, Course>;
+    appendFetchedCourses: Action<RootStore, Course[]>;
+    activeCourseId: string | null;
+    setActiveCourseId: Action<RootStore, string | null>;
+    activeCourse: Computed<RootStore, Course | null>;
 }
 
 const rootStore: RootStore = {
@@ -257,6 +255,24 @@ const rootStore: RootStore = {
         } finally {
             actions.setLoadingData(false);
         }
+    }),
+    activeSession: Session.fromDate(),
+    setActiveSession: action((state, payload) => {
+        state.activeSession = payload;
+    }),
+    allCourses: {},
+    appendFetchedCourses: action((state, payload) => {
+        for (const course of payload) {
+            const courseId = getCourseId(course);
+            state.allCourses[courseId] = course;
+        }
+    }),
+    activeCourseId: null,
+    setActiveCourseId: action((state, payload) => {
+        state.activeCourseId = payload;
+    }),
+    activeCourse: computed((state) => {
+        return state.allCourses[state.activeCourseId || ""] || null;
     }),
 };
 
