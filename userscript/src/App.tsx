@@ -1,17 +1,25 @@
-import React from "react";
+import React, { act } from "react";
 import "./App.css";
-import "./namespaced-bootstrap.css";
-import { Modal, Button } from "react-bootstrap";
+// Previously bootstrap was namespaced via `less`. However the new version of bootstrap causes a compile error with `less`,
+// so we just directly import it at the risk of mangling global styles.
+//import "./namespaced-bootstrap.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Modal, Button, Tabs, Tab, Alert } from "react-bootstrap";
 import { DayPicker } from "./components/day-picker";
 import { BuildingPicker } from "./components/building-picker";
 import { RoomCalendar } from "./components/room-calendar";
 import { CapacitySlider } from "./components/capacity-slider";
 import { ActivityThrobber } from "./components/activity-throbber";
 import { RoomInfoDownloadButton } from "./components/room-info-download";
-import { useStoreActions } from "./store/hooks";
+import { useStoreActions, useStoreState } from "./store/hooks";
+import { CourseStats } from "./components/course-stats";
 
 export function App() {
+    const host = useStoreState((state) => state.host);
     const [modalOpen, setModalOpen] = React.useState(false);
+    const [activeTab, setActiveTab] = React.useState<"rooms" | "course">(
+        host === "lsm" ? "rooms" : "course"
+    );
     const init = useStoreActions((state) => state.init);
 
     React.useEffect(() => {
@@ -47,33 +55,80 @@ export function App() {
                 onHide={() => setModalOpen(false)}
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>
-                        UToronto LSM Addon
+                    <Modal.Title className="modal-title">
                         <ActivityThrobber />
+                        UToronto LSM Addon
+                        <Tabs
+                            id="room-viewer-tabs"
+                            defaultActiveKey="rooms"
+                            activeKey={activeTab}
+                            onSelect={(k) =>
+                                setActiveTab((k as typeof activeTab) || "rooms")
+                            }
+                            style={{ marginLeft: "1rem", fontWeight: "normal" }}
+                            variant="pills"
+                        >
+                            <Tab eventKey="rooms" title="Room Viewer" />
+                            <Tab eventKey="course" title="Course Stats" />
+                        </Tabs>
                     </Modal.Title>
                 </Modal.Header>
 
-                <Modal.Body>
-                    <div className="d-flex align-items-start">
-                        <DayPicker />
-                        <div style={{ flexGrow: 1 }}>
-                            <CapacitySlider />
-                        </div>
-                    </div>
-                    <BuildingPicker />
-                    <RoomCalendar />
-                </Modal.Body>
+                {activeTab === "rooms" && (
+                    <React.Fragment>
+                        <Modal.Body>
+                            {host !== "lsm" && (
+                                <Alert variant="warning">
+                                    <p style={{ margin: 0 }}>
+                                        <b>Warning:</b> Room booking information
+                                        is only available when this addon is run
+                                        from{" "}
+                                        <Alert.Link href="https://lsm.utoronto.ca/lsm_portal">
+                                            https://lsm.utoronto.ca/lsm_portal
+                                        </Alert.Link>
+                                        .
+                                    </p>
+                                </Alert>
+                            )}
+                            <div className="d-flex align-items-start">
+                                <DayPicker />
+                                <div style={{ flexGrow: 1 }}>
+                                    <CapacitySlider />
+                                </div>
+                            </div>
+                            <BuildingPicker />
+                            <RoomCalendar />
+                        </Modal.Body>
 
-                <Modal.Footer>
-                    <RoomInfoDownloadButton />
-                    <span style={{ flexGrow: 1 }} />
-                    <Button
-                        variant="secondary"
-                        onClick={() => setModalOpen(false)}
-                    >
-                        Close
-                    </Button>
-                </Modal.Footer>
+                        <Modal.Footer>
+                            <RoomInfoDownloadButton />
+                            <span style={{ flexGrow: 1 }} />
+                            <Button
+                                variant="secondary"
+                                onClick={() => setModalOpen(false)}
+                            >
+                                Close
+                            </Button>
+                        </Modal.Footer>
+                    </React.Fragment>
+                )}
+                {activeTab === "course" && (
+                    <React.Fragment>
+                        <Modal.Body>
+                            <CourseStats />
+                        </Modal.Body>
+
+                        <Modal.Footer>
+                            <span style={{ flexGrow: 1 }} />
+                            <Button
+                                variant="secondary"
+                                onClick={() => setModalOpen(false)}
+                            >
+                                Close
+                            </Button>
+                        </Modal.Footer>
+                    </React.Fragment>
+                )}
             </Modal>
         </React.Fragment>
     );

@@ -1,7 +1,17 @@
 import { log } from "../utils";
 
 export interface ExtractedKeys {
-    ajaxIdentifiers: { BLDG: string; ROOM: string; PLUGIN: string };
+    /**
+     * These are the plugin keys used to authenticate various requests.
+     */
+    ajaxIdentifiers: {
+        BLDG: string;
+        ROOM: string;
+        PLUGIN: string;
+        P1_COURSE: string;
+        P1_SESSION: string;
+        P1_SUBJECT: string;
+    };
     pFlowId: string;
     pFlowStepId: string;
     pInstance: string;
@@ -29,37 +39,44 @@ export function extractKeysFromLsmPage(html: string) {
         Array.from(doc.querySelectorAll("script:not([src])"))
             .map((x) => x.firstChild?.nodeValue || "")
             .filter((t) => t.match("ajaxIdentifier"))[0] || "";
-    const ajaxIdentifiers = extractedJavascript
-        .split("\n")
-        .filter((s) => s.match('{"') && s.match("ajaxIdentifier"))
-        .map((s) => {
-            const match = s.match(/"ajaxIdentifier":"(.*?)"/);
-            if (match) {
-                try {
-                    // We're paring Javascript strings directly. They may include
-                    // escaped unicode (e.g. "\u002C"). This escaped unicode should be processed.
-                    return JSON.parse(`"${match[1]}"`);
-                } catch (e) {
-                    return match[1];
+    const ajaxIdentifiers = Object.fromEntries(
+        extractedJavascript
+            .split("\n")
+            .filter((s) => s.match('{"') && s.match("ajaxIdentifier"))
+            .map((s) => {
+                const match = s.match(/"#(\w+)".*"ajaxIdentifier":"(.*?)"/);
+                if (match) {
+                    try {
+                        // We're paring Javascript strings directly. They may include
+                        // escaped unicode (e.g. "\u002C"). This escaped unicode should be processed.
+                        return [match[1], JSON.parse(`"${match[2]}"`)];
+                    } catch (e) {
+                        return [match[1], match[2]];
+                    }
+                } else {
+                    // The previous regex won't match the PLUGIN key, so we include a fallback
+                    const match = s.match(/"ajaxIdentifier":"(.*?)"/);
+                    if (match) {
+                        try {
+                            return ["PLUGIN", JSON.parse(`"${match[1]}"`)];
+                        } catch (e) {
+                            return ["PLUGIN", match[1]];
+                        }
+                    }
                 }
-            }
-            return "";
-        });
-    if (ajaxIdentifiers.length !== 3 || ajaxIdentifiers.some((x) => x === "")) {
-        // It turns out this function can be reused on multiple pages, so this error
-        // isn't so useful.
-        //log(
-        //    "WARNING: expected three non-empty ajaxIdentifiers, but found",
-        //    ajaxIdentifiers,
-        //    "This could be an error with extracting the values from the page's Javascript"
-        //);
-    }
+                return ["", ""];
+            })
+    );
 
     const ret = {
         ajaxIdentifiers: {
-            BLDG: ajaxIdentifiers[0] || "",
-            ROOM: ajaxIdentifiers[1] || "",
-            PLUGIN: ajaxIdentifiers[2] || "",
+            BLDG: "",
+            ROOM: "",
+            PLUGIN: "",
+            P1_COURSE: "",
+            P1_SESSON: "",
+            P1_SUBJECT: "",
+            ...ajaxIdentifiers,
         },
         buildings: {},
     };
@@ -97,7 +114,7 @@ export function extractKeysFromLsmPage(html: string) {
             "input[data-for=P1_DISPLAY]"
         ) as HTMLInputElement;
         if (displayForInput) {
-            (ret as ExtractedKeys).P1_DISPLAY_OBJ = {
+            (ret as any as ExtractedKeys).P1_DISPLAY_OBJ = {
                 n: "P1_DISPLAY",
                 v: displayInput.value,
                 ck: displayForInput.value,
@@ -109,5 +126,5 @@ export function extractKeysFromLsmPage(html: string) {
         }
     }
 
-    return ret as ExtractedKeys;
+    return ret as any as ExtractedKeys;
 }

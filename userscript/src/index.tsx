@@ -14,9 +14,27 @@ log("React script has successfully started");
 async function main() {
     // Find <body/>. This can be any element. We wait until
     // the page has loaded enough for that element to exist.
-    const body = await awaitElement(".t-NavigationBar");
-    const container = document.createElement("li");
+    const body = await Promise.race([
+        awaitElement(".t-NavigationBar"),
+        awaitElement("header .header-container"),
+    ]);
+    let container: Element = document.createElement("li");
     container.classList.add("t-NavigationBar-item");
+
+    if (globalThis.location.host.startsWith("ttb.")) {
+        container = document.createElement("div");
+        container.setAttribute("style", "display: flex; flex-direction: row; align-items: center;");
+        const style = document.createElement("style");
+        style.textContent = `
+            .t-Button {
+                padding: 0.5rem 1rem;
+                border-radius: 0.5rem;
+                cursor: pointer;
+                margin-left: 1rem;
+            }
+        `;
+        document.head.appendChild(style);
+    }
 
     body.prepend(container);
     ReactDOM.render(

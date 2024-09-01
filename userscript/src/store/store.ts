@@ -7,11 +7,24 @@ import {
     thunk,
     Thunk,
 } from "easy-peasy";
-import { fetchScheduleForRooms, RoomBooking } from "../api/booking-info";
+import {
+    CourseRoomBookings,
+    fetchRoomsForCourse,
+    fetchScheduleForRooms,
+    RoomBooking,
+} from "../api/booking-info";
 import { RoomInfo } from "../api/building-info";
 import { extractKeysFromLsmPage } from "../api/extract-keys";
 import { ROOM_INFO } from "../data/room-info";
 import { localFetch, log } from "../utils";
+import { Session } from "../libs/session-date";
+import {
+    Course,
+    getCourseId,
+    getCourseInfo,
+    getCourseInfoByInstructor,
+} from "../api/course-info";
+import { i } from "vite/dist/node/types.d-aGj9QkWt";
 
 export type StoredRoomInfo = {
     _downloadDate: string;
@@ -19,18 +32,7 @@ export type StoredRoomInfo = {
 };
 
 export const HOURS_IN_CALENDAR = [
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
+    9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
 ];
 const EMPTY_LIST: any[] = [];
 
@@ -45,6 +47,10 @@ function hashBooking(booking: RoomBooking, bookingDate?: string) {
 }
 export interface RootStore {
     init: Thunk<RootStore, never>;
+    /**
+     * The host page. Room booking information is only available when running on `lsm.utoronto.ca`.
+     */
+    host: "ttb" | "lsm";
     roomInfo: StoredRoomInfo;
     setRoomInfo: Action<RootStore, StoredRoomInfo>;
     loadingData: boolean;
@@ -77,6 +83,34 @@ export interface RootStore {
             bookings: ({ desc: string; hour: number } | null)[];
         }[]
     >;
+    activeSession: Session;
+    setActiveSession: Action<RootStore, Session>;
+    allCourses: Record<string, Course>;
+    appendFetchedCourses: Action<RootStore, Course[]>;
+    fetchCoursesBySearchTerm: Thunk<
+        RootStore,
+        string,
+        any,
+        {},
+        Promise<Course[]>
+    >;
+    fetchCoursesByInstructor: Thunk<RootStore, string[]>;
+    activeCourseId: string | null;
+    setActiveCourseId: Action<RootStore, string | null>;
+    /**
+     * The course that is currently active (i.e. being viewed)
+     */
+    activeCourse: Computed<RootStore, Course | null>;
+    /**
+     * Instructors that are teaching a _Lecture_ in the current course.
+     */
+    activeInstructors: Computed<
+        RootStore,
+        { firstName: string; lastName: string }[]
+    >;
+    fetchBookingsForCourse: Thunk<RootStore, Course>;
+    courseRoomBookings: CourseRoomBookings;
+    setCourseRoomBookings: Action<RootStore, CourseRoomBookings>;
 }
 
 const rootStore: RootStore = {
@@ -108,6 +142,11 @@ const rootStore: RootStore = {
             );
         }
     }),
+    host: globalThis.location.host.startsWith("ttb.")
+        ? "ttb"
+        : globalThis.location.host.startsWith("lsm.")
+        ? "lsm"
+        : "ttb",
     roomInfo: ROOM_INFO,
     setRoomInfo: action((state, payload) => {
         state.roomInfo = payload;
@@ -257,6 +296,120 @@ const rootStore: RootStore = {
         } finally {
             actions.setLoadingData(false);
         }
+    }),
+    fetchBookingsForCourse: thunk(async (actions, payload, { getState }) => {
+        const activeSession = getState().activeSession;
+        const sessionCode = activeSession.toTtbApiString();
+        const course = payload;
+
+        const courseKey = `${sessionCode}-${course.code}${course.sectionCode}`;
+        const alreadyRetrievedOrInProgress =
+            getState().courseRoomBookings[courseKey];
+        if (alreadyRetrievedOrInProgress) {
+            return;
+        }
+
+        actions.setLoadingData(true);
+        // We set the bookings for `courseKey` to a truthy value so we don't double-fetch
+        actions.setCourseRoomBookings({ [courseKey]: [] });
+
+        try {
+            // Get the page variables so we can start making requests
+            let resp = await localFetch(
+                "https://lsm.utoronto.ca/ords/f?p=151:9999::BRANCH_TO_PAGE_ACCEPT:::"
+            );
+            const pageVars = extractKeysFromLsmPage(await resp.text());
+            const bookings = await fetchRoomsForCourse(
+                course,
+                sessionCode,
+                pageVars
+            );
+
+            log(
+                "Got bookings for for",
+                activeSession.toTtbApiString(),
+                bookings
+            );
+            actions.setCourseRoomBookings(bookings);
+        } finally {
+            actions.setLoadingData(false);
+        }
+    }),
+    courseRoomBookings: {},
+    setCourseRoomBookings: action((state, payload) => {
+        Object.assign(state.courseRoomBookings, payload);
+    }),
+    activeSession: Session.fromDate(),
+    setActiveSession: action((state, payload) => {
+        state.activeSession = payload;
+    }),
+    fetchCoursesBySearchTerm: thunk(async (actions, payload, { getState }) => {
+        const searchTerm = payload;
+        const activeSession = getState().activeSession;
+        if (!activeSession) {
+            return [];
+        }
+
+        actions.setLoadingData(true);
+
+        try {
+            const courses =
+                (await getCourseInfo(searchTerm, activeSession))?.payload
+                    ?.pageableCourse?.courses ?? [];
+            log("Retrieved courses info", courses);
+            actions.appendFetchedCourses(courses);
+            return courses;
+        } finally {
+            actions.setLoadingData(false);
+        }
+        return [];
+    }),
+    fetchCoursesByInstructor: thunk(async (actions, payload, { getState }) => {
+        const instructors = payload;
+        const activeSession = getState().activeSession;
+        if (!activeSession) {
+            return [];
+        }
+
+        actions.setLoadingData(true);
+
+        try {
+            const allCourses = await getCourseInfoByInstructor(
+                instructors,
+                activeSession
+            );
+            allCourses.forEach((course) => {
+                const courses = course?.payload?.pageableCourse?.courses ?? [];
+                log("Retrieved courses info", courses);
+                actions.appendFetchedCourses(courses);
+            });
+        } finally {
+            actions.setLoadingData(false);
+        }
+        return [];
+    }),
+    allCourses: {},
+    appendFetchedCourses: action((state, payload) => {
+        for (const course of payload) {
+            const courseId = getCourseId(course);
+            state.allCourses[courseId] = course;
+        }
+    }),
+    activeCourseId: null,
+    setActiveCourseId: action((state, payload) => {
+        state.activeCourseId = payload;
+    }),
+    activeCourse: computed((state) => {
+        return state.allCourses[state.activeCourseId || ""] || null;
+    }),
+    activeInstructors: computed((state) => {
+        const instructors = Object.fromEntries(
+            (state.activeCourse?.sections || [])
+                .filter((s) => s.type === "Lecture")
+                .flatMap((s) => s.instructors)
+                .map((i) => [`${i.firstName} ${i.lastName}`, i])
+        );
+        return Object.values(instructors);
     }),
 };
 
