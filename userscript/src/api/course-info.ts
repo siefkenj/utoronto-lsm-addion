@@ -71,6 +71,14 @@ export interface Section {
     openLimitInd: string;
     enrolmentControls: EnrolmentControl[];
     linkedMeetingSections: any;
+    /**
+     * Inserted in when needed by the view-model
+     */
+    code?: string;
+    /**
+     * Inserted in when needed by the view-model
+     */
+    sectionCode?: string;
 }
 
 export interface MeetingTime {
@@ -199,6 +207,9 @@ export interface CourseApiQueryStatus {
     message: string;
 }
 
+/**
+ * Retrieve scheduling information about a course by a `courseCode` search term and a `session`.
+ */
 export async function getCourseInfo(courseCode: string, session: SessionLike) {
     const ses = new Session(session);
 
@@ -263,6 +274,85 @@ export async function getCourseInfo(courseCode: string, session: SessionLike) {
         return (await response.json()) as CourseApiQuery;
     } catch (e) {
         log(e);
+        throw e;
+    }
+}
+
+/**
+ * Retrieve scheduling information about a course by a list of `instructors` and a `session`.
+ */
+export async function getCourseInfoByInstructor(
+    instructors: string[],
+    session: SessionLike
+) {
+    const ses = new Session(session);
+
+    try {
+        return Promise.all(
+            instructors.map(async (instructor) => {
+                const body = JSON.stringify({
+                    courseCodeAndTitleProps: {
+                        courseCode: "",
+                        courseTitle: "",
+                        courseSectionCode: "",
+                    },
+                    departmentProps: [],
+                    campuses: [],
+                    sessions: [
+                        ses.toTtbApiString(),
+                        // Always include Y term in the searches
+                        ses.toTtbApiString("Y"),
+                    ],
+                    requirementProps: [],
+                    instructor,
+                    courseLevels: [],
+                    deliveryModes: [],
+                    dayPreferences: [],
+                    timePreferences: [],
+                    // ARTSC = Arts & Science, APSC = Applied Science and Engineering
+                    divisions: ["ARTSC", "APSC"],
+                    creditWeights: [],
+                    availableSpace: false,
+                    waitListable: false,
+                    page: 1,
+                    pageSize: 100,
+                    direction: "asc",
+                });
+                const url =
+                    "https://api.easi.utoronto.ca/ttb/getPageableCourses";
+                log("Making POST request to", url, "with body", body);
+
+                let response = await fetch(
+                    "https://api.easi.utoronto.ca/ttb/getPageableCourses",
+                    {
+                        credentials: "omit",
+                        headers: {
+                            //        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
+                            Accept: "application/json, text/plain, */*",
+                            "Accept-Language": "en-US,en;q=0.5",
+                            "Content-Type": "application/json",
+                            "Sec-Fetch-Dest": "empty",
+                            "Sec-Fetch-Mode": "cors",
+                            "Sec-Fetch-Site": "same-site",
+                            Priority: "u=0",
+                            Pragma: "no-cache",
+                            "Cache-Control": "no-cache",
+                        },
+                        referrer: "https://ttb.utoronto.ca/",
+                        body,
+                        method: "POST",
+                        mode: "cors",
+                    }
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch course information");
+                }
+                return (await response.json()) as CourseApiQuery;
+            })
+        );
+    } catch (e) {
+        log(e);
+        throw e;
     }
 }
 

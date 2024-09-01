@@ -1,4 +1,4 @@
-import React from "react";
+import React, { act } from "react";
 import { SessionDisplay, SessionSelectWide } from "./session-select";
 import { Session } from "../libs/session-date";
 import {
@@ -18,19 +18,25 @@ import {
 import { log } from "../utils";
 import {
     Course,
+    Section,
     getCourseId,
     getCourseInfo,
     getCourseStats,
 } from "../api/course-info";
+import {
+    CourseTimetable,
+    InstructorAvailabilityTimetable,
+} from "./course-timetable";
 
 export function CourseStats() {
+    const host = useStoreState((state) => state.host);
     const [courseCode, setCourseCode] = React.useState("");
     const activeSession = useStoreState((state) => state.activeSession);
     const setActiveSession = useStoreActions((state) => state.setActiveSession);
     const [error, setError] = React.useState<string | null>(null);
     const setLoadingData = useStoreActions((state) => state.setLoadingData);
-    const appendFetchCourses = useStoreActions(
-        (state) => state.appendFetchedCourses
+    const fetchCoursesBySearchTerm = useStoreActions(
+        (actions) => actions.fetchCoursesBySearchTerm
     );
     const activeCourse = useStoreState((state) => state.activeCourse);
     const allCourses = useStoreState((state) => state.allCourses);
@@ -40,6 +46,43 @@ export function CourseStats() {
     const [availableCourseIds, setAvailableCourseIds] = React.useState<
         string[]
     >([]);
+    const fetchBookingsForCourse = useStoreActions(
+        (actions) => actions.fetchBookingsForCourse
+    );
+    const activeInstructors = useStoreState((state) => state.activeInstructors);
+    const fetchCoursesByInstructor = useStoreActions(
+        (actions) => actions.fetchCoursesByInstructor
+    );
+    // All sections of courses taught by active instructors
+    const activeInstructorSections = React.useMemo(() => {
+        // Find all sections that have an instructor matching someone from the activeInstructors list
+        // Inject into that section the course code and sectionCode.
+        const sections: Section[] = Object.values(allCourses)
+            .flatMap((c) =>
+                c.sections.map(
+                    (s) =>
+                        ({
+                            ...s,
+                            code: c.code,
+                            sectionCode: c.sectionCode,
+                        } satisfies Section)
+                )
+            )
+            .filter(
+                (s) =>
+                    s.type === "Lecture" &&
+                    s.cancelInd === "N" &&
+                    s.instructors.some((i) =>
+                        activeInstructors.some(
+                            (ai) =>
+                                ai.firstName === i.firstName &&
+                                ai.lastName === i.lastName
+                        )
+                    )
+            );
+        return sections;
+    }, [allCourses, activeInstructors]);
+
     const onSearchClick = React.useCallback(async () => {
         try {
             setLoadingData(true);
@@ -47,10 +90,7 @@ export function CourseStats() {
             setActiveCourseId(null);
             setAvailableCourseIds([]);
 
-            const courses =
-                (await getCourseInfo(courseCode.trim(), activeSession))?.payload
-                    ?.pageableCourse?.courses ?? [];
-            log("Retrieved courses info", courses);
+            let courses = await fetchCoursesBySearchTerm(courseCode.trim());
             if (courses.length === 0) {
                 setError(`Could not find courses matching "${courseCode}"`);
             } else if (courses.length >= 20) {
@@ -60,7 +100,13 @@ export function CourseStats() {
             } else {
                 setError(null);
             }
-            appendFetchCourses(courses);
+
+            // We want to only select a course if its prefix matches what we typed.
+            courses = courses.filter((c) =>
+                `${c.code}${c.sectionCode}`
+                    .toUpperCase()
+                    .startsWith(courseCode.trim().toUpperCase())
+            );
 
             if (courses.length === 1) {
                 setActiveCourseId(getCourseId(courses[0]));
@@ -74,8 +120,31 @@ export function CourseStats() {
         }
     }, [activeSession, courseCode]);
 
+    React.useEffect(() => {
+        if (activeCourse) {
+            fetchBookingsForCourse(activeCourse).catch(log);
+        }
+    }, [activeCourse, activeSession]);
+    React.useEffect(() => {
+        fetchCoursesByInstructor(
+            activeInstructors.map((i) => `${i.firstName} ${i.lastName}`)
+        ).catch(log);
+    }, [activeInstructors]);
+
     return (
         <Stack gap={2}>
+            {host !== "lsm" && (
+                <Alert variant="warning">
+                    <p style={{ margin: 0 }}>
+                        <b>Warning:</b> Room booking information is only
+                        available when this addon is run from{" "}
+                        <Alert.Link href="https://lsm.utoronto.ca/lsm_portal">
+                            https://lsm.utoronto.ca/lsm_portal
+                        </Alert.Link>
+                        .
+                    </p>
+                </Alert>
+            )}
             <div style={{ display: "flex", alignItems: "flex-start" }}>
                 <div style={{ flexGrow: 0 }}>
                     <SessionDisplay session={activeSession} />
@@ -142,6 +211,33 @@ export function CourseStats() {
                                 showStats={true}
                             />
                         </Alert>
+                        <h4>Course Description</h4>
+                        <p>{activeCourse.cmCourseInfo.description}</p>
+                        <h3 style={{ marginTop: "1em" }}>Lectures</h3>
+                        <CourseTimetable
+                            course={activeCourse}
+                            sessionCode={activeSession.toTtbApiString()}
+                        />
+                        <h3 style={{ marginTop: "1em" }}>Tutorials</h3>
+                        <CourseTimetable
+                            course={activeCourse}
+                            display="tutorial"
+                            sessionCode={activeSession.toTtbApiString()}
+                        />
+                        <h3 style={{ marginTop: "1em" }}>
+                            Instructor Availability
+                        </h3>
+                        <p>
+                            Below is a timetable listing every course taught by
+                            instructors in {activeCourse.code}. These are
+                            queried from the database and may not contain
+                            courses like graduate courses (or other oddities
+                            that the database doesn't list).
+                        </p>
+                        <InstructorAvailabilityTimetable
+                            sections={activeInstructorSections}
+                            sessionCode={activeSession.toTtbApiString()}
+                        />
                     </React.Fragment>
                 )}
             </Stack>

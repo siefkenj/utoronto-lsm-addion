@@ -39,14 +39,13 @@ function RoomInfoDisplay({ room }: { room: RoomInfo }) {
     return (
         <OverlayTrigger
             placement="right"
-            trigger="click"
-            rootClose
+            trigger={["click"]}
             overlay={
                 <Popover id={`popover-${roomHash}`}>
-                    <Popover.Title>
+                    <Popover.Header>
                         {room.building} Room {room.room}
-                    </Popover.Title>
-                    <Popover.Content>
+                    </Popover.Header>
+                    <Popover.Body>
                         <ListGroup>
                             <ListGroup.Item>
                                 Capacity: <b>{room.capacity || "unknown"}</b>
@@ -70,11 +69,11 @@ function RoomInfoDisplay({ room }: { room: RoomInfo }) {
                                 ))}
                             </ListGroup.Item>
                         </ListGroup>
-                    </Popover.Content>
+                    </Popover.Body>
                 </Popover>
             }
         >
-            <div className="room-info-display">
+            <div className="room-info-display" tabIndex={10}>
                 <h6>
                     {room.building} {room.room}
                 </h6>
