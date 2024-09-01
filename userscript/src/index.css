@@ -63,3 +63,8 @@ code {
     display: inline;
     margin-left: 1em;
 }
+
+#canvas-quiz-stats .calendar_default_main,
+#canvas-quiz-stats .calendar_default_main * {
+    user-select: text !important;
+}
